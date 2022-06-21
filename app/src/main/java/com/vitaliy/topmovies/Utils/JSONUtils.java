@@ -26,6 +26,7 @@ public class JSONUtils {
     //онформация о фильме
     private static final String KEY_VOTE_COUNT = "vote_count";
     private static final String KEY_ID = "id";
+    private static final String KEY_IMDB_ID = "imdb_id";
     private static final String KEY_TITLE = "title";
     private static final String KEY_ORIGINAL_TITLE = "original_title";
     private static final String KEY_OVERVIEW = "overview";
@@ -88,6 +89,7 @@ public class JSONUtils {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject objectMovie = jsonArray.getJSONObject(i);
                 int id = objectMovie.getInt(KEY_ID);
+                String imdbId = objectMovie.getString(KEY_IMDB_ID);
                 int voteCount = objectMovie.getInt(KEY_VOTE_COUNT);
                 String title = objectMovie.getString(KEY_TITLE);
                 String originalTitle = objectMovie.getString(KEY_ORIGINAL_TITLE);
@@ -97,7 +99,7 @@ public class JSONUtils {
                 String backdropPath = objectMovie.getString(KEY_BACKDROP_PATH);
                 Double voteAverage = objectMovie.getDouble(KEY_VOTE_AVERAGE);
                 String releaseDate = objectMovie.getString(KEY_RELEASE_DATE);
-                Movie movie = new Movie(id, voteCount, title, originalTitle, overView, posterPath, bigPosterPath, backdropPath, voteAverage, releaseDate);
+                Movie movie = new Movie(id, imdbId, voteCount, title, originalTitle, overView, posterPath, bigPosterPath, backdropPath, voteAverage, releaseDate);
                 result.add(movie);
 
             }
