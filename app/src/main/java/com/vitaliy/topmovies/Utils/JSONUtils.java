@@ -89,7 +89,6 @@ public class JSONUtils {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject objectMovie = jsonArray.getJSONObject(i);
                 int id = objectMovie.getInt(KEY_ID);
-                String imdbId = objectMovie.getString(KEY_IMDB_ID);
                 int voteCount = objectMovie.getInt(KEY_VOTE_COUNT);
                 String title = objectMovie.getString(KEY_TITLE);
                 String originalTitle = objectMovie.getString(KEY_ORIGINAL_TITLE);
@@ -99,7 +98,7 @@ public class JSONUtils {
                 String backdropPath = objectMovie.getString(KEY_BACKDROP_PATH);
                 Double voteAverage = objectMovie.getDouble(KEY_VOTE_AVERAGE);
                 String releaseDate = objectMovie.getString(KEY_RELEASE_DATE);
-                Movie movie = new Movie(id, imdbId, voteCount, title, originalTitle, overView, posterPath, bigPosterPath, backdropPath, voteAverage, releaseDate);
+                Movie movie = new Movie(id, voteCount, title, originalTitle, overView, posterPath, bigPosterPath, backdropPath, voteAverage, releaseDate);
                 result.add(movie);
 
             }
