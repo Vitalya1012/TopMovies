@@ -9,7 +9,6 @@ public class Movie {
     @PrimaryKey (autoGenerate = true)
     private int uniqueId;
     private int id;
-    private String imdbId;
     private int voteCount;
     private String title;
     private String originalTitle;
@@ -20,10 +19,9 @@ public class Movie {
     private Double voteAverage;
     private String releaseDate;
 
-    public Movie(int uniqueId, int id, String imdbId, int voteCount, String title, String originalTitle, String overView, String posterPath, String bigPosterPath, String backdropPath, Double voteAverage, String releaseDate) {
+    public Movie(int uniqueId, int id, int voteCount, String title, String originalTitle, String overView, String posterPath, String bigPosterPath, String backdropPath, Double voteAverage, String releaseDate) {
         this.uniqueId = uniqueId;
         this.id = id;
-        this.imdbId = imdbId;
         this.voteCount = voteCount;
         this.title = title;
         this.originalTitle = originalTitle;
@@ -35,9 +33,8 @@ public class Movie {
         this.releaseDate = releaseDate;
     }
     @Ignore
-    public Movie(int id, String imdbId, int voteCount, String title, String originalTitle, String overView, String posterPath, String bigPosterPath, String backdropPath, Double voteAverage, String releaseDate) {
+    public Movie(int id, int voteCount, String title, String originalTitle, String overView, String posterPath, String bigPosterPath, String backdropPath, Double voteAverage, String releaseDate) {
         this.id = id;
-        this.imdbId = imdbId;
         this.voteCount = voteCount;
         this.title = title;
         this.originalTitle = originalTitle;
@@ -71,14 +68,6 @@ public class Movie {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public String getImdbId() {
-        return imdbId;
-    }
-
-    public void setImdbId(String imdbId) {
-        this.imdbId = imdbId;
     }
 
     public int getVoteCount() {

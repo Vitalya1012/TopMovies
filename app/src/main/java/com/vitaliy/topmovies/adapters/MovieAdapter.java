@@ -1,6 +1,5 @@
 package com.vitaliy.topmovies.adapters;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,7 +53,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         if (movies.size() >= 20 && position > movies.size() - 4 && onReachEndListener != null){
             onReachEndListener.onReachEnd();
         }
-        Movie movie = movies.get(position);
+            Movie movie = movies.get(position);
         ImageView imageView = holder.imageViewSmallPoster;
         Picasso.get().load(movie.getPosterPath()).into(imageView);
     }

@@ -4,11 +4,13 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.loader.content.AsyncTaskLoader;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,15 +21,24 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NetworkUtils {
 
     private static final String BASE_URL = "https://api.themoviedb.org/3/discover/movie";
+    private static final String BASE_URL_IMDB_ID = "https://api.themoviedb.org/3/movie/%s";
     private static final String BASE_URL_VIDEOS = "https://api.themoviedb.org/3/movie/%s/videos";
     private static final String BASE_URL_REVIEWS = "https://api.themoviedb.org/3/movie/%s/reviews";
+    private static final String BASE_URL_VIDEOCDN = "https://videocdn.tv/api/short";
 
     private static final String PARAMS_API_KEY = "api_key";
+    private static final String PARAMS_API_TOKEN = "api_token";
+    private static final String PARAMS_API_IMDB_ID = "imdb_id";
     private static final String PARAMS_LANGUAGE = "language";
     private static final String PARAMS_SORT_BY = "sort_by";
     private static final String PARAMS_PAGE = "page";
@@ -41,10 +52,12 @@ public class NetworkUtils {
     public static final int POPULARITY = 0;
     public static final int TOP_RATED = 1;
 
-    public static URL buildURLToVideos(int id, String lang){
-        Uri uri = Uri.parse(String.format(BASE_URL_VIDEOS,id)).buildUpon()
-                .appendQueryParameter(PARAMS_API_KEY,API_KEY)
-                .appendQueryParameter(PARAMS_LANGUAGE,lang)
+    private static final String API_TOKEN = "57cVDed4stRzk6sJFu2sV1HXRH8kLgO2";
+
+    public static URL buildURLToCDN(String imdbId) {
+        Uri uri = Uri.parse(BASE_URL_VIDEOCDN).buildUpon()
+                .appendQueryParameter(PARAMS_API_TOKEN, API_TOKEN)
+                .appendQueryParameter(PARAMS_API_IMDB_ID, imdbId)
                 .build();
         try {
             return new URL(uri.toString());
@@ -54,10 +67,36 @@ public class NetworkUtils {
         return null;
     }
 
-    public static URL buildURLToReviews(int id, String lang){
-        Uri uri = Uri.parse(String.format(BASE_URL_REVIEWS,id)).buildUpon()
-                .appendQueryParameter(PARAMS_API_KEY,API_KEY)
-                .appendQueryParameter(PARAMS_LANGUAGE,lang)
+    public static URL buildURLToImdbId(int id, String lang) {
+        Uri uri = Uri.parse(String.format(BASE_URL_IMDB_ID, id)).buildUpon()
+                .appendQueryParameter(PARAMS_API_KEY, API_KEY)
+                .appendQueryParameter(PARAMS_LANGUAGE, lang)
+                .build();
+        try {
+            return new URL(uri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static URL buildURLToVideos(int id, String lang) {
+        Uri uri = Uri.parse(String.format(BASE_URL_VIDEOS, id)).buildUpon()
+                .appendQueryParameter(PARAMS_API_KEY, API_KEY)
+                .appendQueryParameter(PARAMS_LANGUAGE, lang)
+                .build();
+        try {
+            return new URL(uri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static URL buildURLToReviews(int id, String lang) {
+        Uri uri = Uri.parse(String.format(BASE_URL_REVIEWS, id)).buildUpon()
+                .appendQueryParameter(PARAMS_API_KEY, API_KEY)
+                .appendQueryParameter(PARAMS_LANGUAGE, lang)
                 .build();
         try {
             return new URL(uri.toString());
@@ -91,7 +130,33 @@ public class NetworkUtils {
         return result;
     }
 
-    public static JSONObject getJSONForVideos(int id, String lang){
+    public static JSONObject getJSONForCDN(String imdbId) {
+        JSONObject result = null;
+        URL url = buildURLToCDN(imdbId);
+        try {
+            result = new JSONLoadTask().execute(url).get();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static JSONObject getJSONForImdbId(int id, String lang) {
+        JSONObject result = null;
+        URL url = buildURLToImdbId(id, lang);
+        try {
+            result = new JSONLoadTask().execute(url).get();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static JSONObject getJSONForVideos(int id, String lang) {
         JSONObject result = null;
         URL url = buildURLToVideos(id, lang);
         try {
@@ -104,7 +169,7 @@ public class NetworkUtils {
         return result;
     }
 
-    public static JSONObject getJSONForReviews(int id, String lang){
+    public static JSONObject getJSONForReviews(int id, String lang) {
         JSONObject result = null;
         URL url = buildURLToReviews(id, lang);
         try {
@@ -118,10 +183,9 @@ public class NetworkUtils {
     }
 
 
-
-    public static JSONObject getJSONFromNetwork(int sortBy, int page, String lang){
+    public static JSONObject getJSONFromNetwork(int sortBy, int page, String lang) {
         JSONObject result = null;
-        URL url = buildURL(sortBy,page, lang);
+        URL url = buildURL(sortBy, page, lang);
         try {
             result = new JSONLoadTask().execute(url).get();
         } catch (ExecutionException e) {
@@ -132,12 +196,12 @@ public class NetworkUtils {
         return result;
     }
 
-    public static class JSONLoader extends AsyncTaskLoader<JSONObject>{
+    public static class JSONLoader extends AsyncTaskLoader<JSONObject> {
 
         private Bundle bundle;
         private OnStartLoadingListener onStartLoadingListener;
 
-        public interface OnStartLoadingListener{
+        public interface OnStartLoadingListener {
             void onStartLoading();
         }
 
@@ -153,7 +217,7 @@ public class NetworkUtils {
         @Override
         protected void onStartLoading() {
             super.onStartLoading();
-            if (onStartLoadingListener != null){
+            if (onStartLoadingListener != null) {
                 onStartLoadingListener.onStartLoading();
             }
             forceLoad();
@@ -184,7 +248,7 @@ public class NetworkUtils {
                 BufferedReader reader = new BufferedReader(inputStreamReader);
                 StringBuilder builder = new StringBuilder();
                 String line = reader.readLine();
-                while (line != null){
+                while (line != null) {
                     builder.append(line);
                     line = reader.readLine();
                 }
@@ -218,7 +282,7 @@ public class NetworkUtils {
                 BufferedReader reader = new BufferedReader(inputStreamReader);
                 StringBuilder builder = new StringBuilder();
                 String line = reader.readLine();
-                while (line != null){
+                while (line != null) {
                     builder.append(line);
                     line = reader.readLine();
                 }
@@ -232,6 +296,73 @@ public class NetworkUtils {
                 }
             }
             return result;
+        }
+    }
+
+    public static String getContent(String url) {
+        DownloadContentTask task = new DownloadContentTask();
+        try {
+            String res = "";
+            String content = task.execute(url).get();
+            Log.i("decoderes", content);
+            String start = "id=\"files\" value=\"";
+            String end = "\"";
+            Pattern pattern = Pattern.compile(start + "(.*?)" + end);
+            Matcher matcher = pattern.matcher(content);
+            while (matcher.find()) {
+                String encodeRes = matcher.group(1);
+                String decodeRes = StringEscapeUtils.unescapeJava(encodeRes);
+                res = decodeRes;
+            }
+            ArrayList<String> links = new ArrayList<>();
+            String start2 = "1080p]//cloud.cdnland";
+            String end2 = "1080.mp4";
+            Pattern pattern2 = Pattern.compile(start2 + "(.*?)" + end2);
+            Matcher matcher2 = pattern2.matcher(res);
+            while (matcher2.find()) {
+                links.add("https://cloud.cdnland" + matcher2.group(1) + "1080.mp4");
+            }
+            return links.get(links.size()-2);
+
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    private static class DownloadContentTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            URL url = null;
+            HttpURLConnection urlConnection = null;
+            StringBuilder result = new StringBuilder();
+            try {
+                url = new URL(strings[0]);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                InputStream inputStream = urlConnection.getInputStream();
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader reader = new BufferedReader(inputStreamReader);
+                String line = reader.readLine();
+                while (line != null) {
+                    result.append(line);
+                    line = reader.readLine();
+                }
+                return result.toString();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+            }
+
+            return null;
         }
     }
 }

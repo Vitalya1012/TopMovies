@@ -14,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -45,6 +46,7 @@ public class DetailActivity extends AppCompatActivity {
     private TextView textViewReleaseDate;
     private TextView textViewOverview;
     private ImageView imageViewAddToFavourite;
+    private Button buttonPlay;
 
     private RecyclerView recyclerViewTrailers;
     private RecyclerView recyclerViewReviews;
@@ -87,6 +89,7 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         lang = Locale.getDefault().getLanguage();
+        buttonPlay = findViewById(R.id.buttonPlay);
         imageViewBigPoster = findViewById(R.id.imageViewBigPoster);
         textViewTitle = findViewById(R.id.textViewTitle);
         textViewOriginalTitle = findViewById(R.id.textViewOriginalTitle);
@@ -127,8 +130,23 @@ public class DetailActivity extends AppCompatActivity {
         recyclerViewTrailers.setAdapter(trailerAdapter);
         JSONObject jsonObjectTrailers = NetworkUtils.getJSONForVideos(movie.getId(), lang);
         JSONObject jsonObjectReviews = NetworkUtils.getJSONForReviews(movie.getId(), lang);
+        JSONObject jsonObjectImdbId = NetworkUtils.getJSONForImdbId(movie.getId(), lang);
         ArrayList<Trailer> trailers = JSONUtils.getVideosFromJSON(jsonObjectTrailers);
         ArrayList<Review> reviews = JSONUtils.getReviewsFromJSON(jsonObjectReviews);
+        String imdbId = JSONUtils.getImdbIdFromJSON(jsonObjectImdbId);
+        JSONObject jsonObjectCDN = NetworkUtils.getJSONForCDN(imdbId);
+        String iFrame = "https:" + JSONUtils.getIframeFromJSON(jsonObjectCDN);
+        String result = NetworkUtils.getContent(iFrame);
+        Log.i("resres", result);
+        buttonPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(result));
+                view.getContext().startActivity(intent);
+            }
+        });
+
+
         reviewAdapter.setReviews(reviews);
         trailerAdapter.setTrailers(trailers);
         scrollViewInfo.smoothScrollTo(0,0);
