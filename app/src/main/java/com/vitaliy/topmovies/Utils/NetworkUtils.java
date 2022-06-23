@@ -315,12 +315,12 @@ public class NetworkUtils {
                 res = decodeRes;
             }
             ArrayList<String> links = new ArrayList<>();
-            String start2 = "1080p]//cloud.cdnland";
-            String end2 = "1080.mp4";
+            String start2 = "720p]//cloud.cdnland";
+            String end2 = "720.mp4";
             Pattern pattern2 = Pattern.compile(start2 + "(.*?)" + end2);
             Matcher matcher2 = pattern2.matcher(res);
             while (matcher2.find()) {
-                links.add("https://cloud.cdnland" + matcher2.group(1) + "1080.mp4");
+                links.add("https://cloud.cdnland" + matcher2.group(1) + "720.mp4");
             }
             return links.get(links.size()-2);
 
